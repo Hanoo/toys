@@ -22,8 +22,9 @@ import share.Utils;
 public class ImgSpider {
 	
 	private static final String site_id = "http://www.tuinvshen.cc";
-	private static final String album = "/Oumei/wuxianchunguang.html";
-	private static final int pageCount = 8;
+	private static final String album = "/MaskedQueen/chaobaoheisimeinv";
+	private static final String SUFFIX_STRING = ".html";
+	private static final int pageCount = 14;
 
 	public static void main(String[] args) {
 		
@@ -33,31 +34,44 @@ public class ImgSpider {
                                                            .setConnectTimeout(6000).build();
         CloseableHttpClient httpClient = HttpClients.custom().setDefaultRequestConfig(globalConfig).build();
 
-        //创建一个GET请求
-        HttpGet httpGet = new HttpGet(site_id + album);
-        httpGet.addHeader("User-Agent",
-        		"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.152 Safari/537.36");
-        httpGet.addHeader("Cookie",
-        		"_gat=1; nsfw-click-load=off; gif-click-load=on; _ga=GA1.2.1861846600.1423061484");
+        String[] pages = wavePages();
+        for(String page : pages) {
+            HttpGet httpGet = new HttpGet(page);
+            httpGet.addHeader("User-Agent",
+            		"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.152 Safari/537.36");
+            httpGet.addHeader("Cookie",
+            		"_gat=1; nsfw-click-load=off; gif-click-load=on; _ga=GA1.2.1861846600.1423061484");
 
-        // 抓取页面HTML
-        String html = "";
-        try {
-            CloseableHttpResponse response = httpClient.execute(httpGet);
-            InputStream in = response.getEntity().getContent();
-            html = Utils.convertStreamToString(in);
+            // 抓取页面HTML
+            String html = "";
+            try {
+                CloseableHttpResponse response = httpClient.execute(httpGet);
+                InputStream in = response.getEntity().getContent();
+                html = Utils.convertStreamToString(in);
 
-			List imgUrls = getImgUrl(html);
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+    			List<String> imgUrls = getImgUrl(html);
+    			for(String imgUrl : imgUrls) {
+    				new Thread(new ImageSaver(imgUrl, album)).start();;
+    			}
+    			Thread.sleep(2000);
+    		} catch (Exception e) {
+    			e.printStackTrace();
+    		}
+        }
 	}
 	
-	private static List<String> wavePages(){
-		List<String> pages = new LinkedList<String>();
+	/**
+	 * 根据页数生成所有页面的访问地址
+	 * @return
+	 */
+	private static String[] wavePages(){
+		String[] pages = new String[pageCount];
 		for(int i=0;i<pageCount;i++) {
-			pages.add(site_id+album+"_"+i);
+			if(i==0) {
+				pages[i] = site_id+album+SUFFIX_STRING;
+			} else {
+				pages[i] = site_id+album+"_"+i+SUFFIX_STRING;
+			}
 		}
 		return pages;
 	}
@@ -87,7 +101,10 @@ public class ImgSpider {
 			ImageTag it = (ImageTag) nodeList.elementAt(i);
 			String imgSrc = it.getAttribute("src");
 			if(imgSrc.endsWith("jpg")) {
-				list.add(site_id+imgSrc);
+				String picIdString = imgSrc.substring(imgSrc.lastIndexOf("/")+1,imgSrc.lastIndexOf("."));
+				if(picIdString.length()>3) {
+					list.add(site_id+imgSrc);
+				}
 			}
 		}
 		return list;
