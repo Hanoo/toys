@@ -22,9 +22,8 @@ import share.Utils;
 public class ImgSpider {
 	
 	private static final String site_id = "http://www.tuinvshen.cc";
-	private static final String album = "/MaskedQueen/chaobaoheisimeinv";
+	private static final String album = "/MeiNv/ruoxi-Baby_211a9449";
 	private static final String SUFFIX_STRING = ".html";
-	private static final int pageCount = 14;
 
 	public static void main(String[] args) {
 		
@@ -34,8 +33,14 @@ public class ImgSpider {
                                                            .setConnectTimeout(6000).build();
         CloseableHttpClient httpClient = HttpClients.custom().setDefaultRequestConfig(globalConfig).build();
 
-        String[] pages = wavePages();
-        for(String page : pages) {
+        int i = 0;
+        while(true) {
+        	String page;
+			if(i==0) {
+				page = site_id+album+SUFFIX_STRING;
+			} else {
+				page = site_id+album+"_"+i+SUFFIX_STRING;
+			}
             HttpGet httpGet = new HttpGet(page);
             httpGet.addHeader("User-Agent",
             		"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.152 Safari/537.36");
@@ -50,30 +55,21 @@ public class ImgSpider {
                 html = Utils.convertStreamToString(in);
 
     			List<String> imgUrls = getImgUrl(html);
-    			for(String imgUrl : imgUrls) {
-    				new Thread(new ImageSaver(imgUrl, album)).start();;
-    			}
-    			Thread.sleep(2000);
+                if(imgUrls.size()>0) {
+					for (String imgUrl : imgUrls) {
+						new Thread(new ImageSaver(imgUrl, album)).start();
+					}
+					i++;
+					Thread.sleep(2000);
+				} else {
+					System.out.println("该页面没有任何图片，按越界处理，捕获终止！");
+					System.out.println("页面总计："+i);
+					break;
+				}
     		} catch (Exception e) {
     			e.printStackTrace();
     		}
         }
-	}
-	
-	/**
-	 * 根据页数生成所有页面的访问地址
-	 * @return
-	 */
-	private static String[] wavePages(){
-		String[] pages = new String[pageCount];
-		for(int i=0;i<pageCount;i++) {
-			if(i==0) {
-				pages[i] = site_id+album+SUFFIX_STRING;
-			} else {
-				pages[i] = site_id+album+"_"+i+SUFFIX_STRING;
-			}
-		}
-		return pages;
 	}
 	
 	/**
