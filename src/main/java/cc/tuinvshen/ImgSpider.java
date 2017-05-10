@@ -26,36 +26,37 @@ public class ImgSpider {
 	private static final String SUFFIX_STRING = ".html";
 
 	public static void main(String[] args) {
-		
-		//HttpClient 超时配置
-        RequestConfig globalConfig = RequestConfig.custom().setCookieSpec(CookieSpecs.STANDARD)
-                                                           .setConnectionRequestTimeout(6000)
-                                                           .setConnectTimeout(6000).build();
-        CloseableHttpClient httpClient = HttpClients.custom().setDefaultRequestConfig(globalConfig).build();
+        imgExtrace(Utils.getClient());
+	}
 
-        int i = 0;
-        while(true) {
-        	String page;
+	/**
+	 * 发起Http请求获取详情页页面
+	 * @param httpClient
+	 */
+	private static void imgExtrace(CloseableHttpClient httpClient){
+		int i = 0;
+		while(true) {
+			String page;
 			if(i==0) {
-				page = site_id+album+SUFFIX_STRING;
+				page = site_id + album + SUFFIX_STRING;
 			} else {
-				page = site_id+album+"_"+i+SUFFIX_STRING;
+				page = site_id + album+"_" + i + SUFFIX_STRING;
 			}
-            HttpGet httpGet = new HttpGet(page);
-            httpGet.addHeader("User-Agent",
-            		"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.152 Safari/537.36");
-            httpGet.addHeader("Cookie",
-            		"_gat=1; nsfw-click-load=off; gif-click-load=on; _ga=GA1.2.1861846600.1423061484");
+			HttpGet httpGet = new HttpGet(page);
+			httpGet.addHeader("User-Agent",
+					"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.152 Safari/537.36");
+			httpGet.addHeader("Cookie",
+					"_gat=1; nsfw-click-load=off; gif-click-load=on; _ga=GA1.2.1861846600.1423061484");
 
-            // 抓取页面HTML
-            String html = "";
-            try {
-                CloseableHttpResponse response = httpClient.execute(httpGet);
-                InputStream in = response.getEntity().getContent();
-                html = Utils.convertStreamToString(in);
+			// 抓取页面HTML
+			String html = "";
+			try {
+				CloseableHttpResponse response = httpClient.execute(httpGet);
+				InputStream in = response.getEntity().getContent();
+				html = Utils.convertStreamToString(in);
 
-    			List<String> imgUrls = getImgUrl(html);
-                if(imgUrls.size()>0) {
+				List<String> imgUrls = getImgUrl(html);
+				if(imgUrls.size()>0) {
 					for (String imgUrl : imgUrls) {
 						new Thread(new ImageSaver(imgUrl, album)).start();
 					}
@@ -66,10 +67,10 @@ public class ImgSpider {
 					System.out.println("页面总计："+i);
 					break;
 				}
-    		} catch (Exception e) {
-    			e.printStackTrace();
-    		}
-        }
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	/**

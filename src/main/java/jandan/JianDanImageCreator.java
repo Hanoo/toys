@@ -1,4 +1,6 @@
 package jandan;
+import share.Utils;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -17,7 +19,7 @@ public class JianDanImageCreator implements Runnable {
 		this.imageUrl = imageUrl;
 		this.page = page;
 	}
-	@Override
+
 	public void run() {
 		File dir = new File(basePath);
 		if(!dir.exists()){
@@ -31,17 +33,7 @@ public class JianDanImageCreator implements Runnable {
 			//创建一个url对象
 			URL url = new URL(imageUrl);
 			InputStream is = url.openStream();
-			byte[] buff = new byte[1024];
-			while(true) {
-				int readed = is.read(buff);
-				if(readed == -1) {
-					break;
-				}
-				byte[] temp = new byte[readed];
-				System.arraycopy(buff, 0, temp, 0, readed);
-				//写入文件
-				os.write(temp);
-			}
+			Utils.writeToFile(is, os);
 			System.out.println("第"+(count++)+"张妹子:"+file.getAbsolutePath());
 			is.close(); 
             os.close();
