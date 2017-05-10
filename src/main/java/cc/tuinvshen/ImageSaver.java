@@ -46,7 +46,7 @@ public class ImageSaver implements Runnable {
             os.close();
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.out.println("================文件写入失败==================");
+			System.out.println("================文件写入失败，文件名："+imageName);
 		}
 	}
 
